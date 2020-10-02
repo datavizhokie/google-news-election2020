@@ -62,3 +62,46 @@ def googlenews_extract(date_range, num_pages, search_text):
     return df_news
 
 df_news = googlenews_extract(stringdate_list, 2, '2020 election')
+
+
+def tokenize_headlines(df):
+    
+
+    headlines = df.title.tolist()
+
+    all_bigrams = []
+
+    for text in headlines:
+        
+        # remove punctuation
+        tokenizer = nltk.RegexpTokenizer(r"\w+")
+        tokens = tokenizer.tokenize(text)
+
+        bigrm = nltk.bigrams(tokens)
+        bigrams = list(bigrm)
+        all_bigrams.append(bigrams)
+        
+    print(f"There are {len(all_bigrams)} bigrams in across all Headlines")
+
+    return all_bigrams
+
+#TODO: bigram sentiment
+#all_bigrams = tokenize_headlines(df_news_subset)
+
+
+def sentiment_scores(df, field):
+
+    analyzer = SentimentIntensityAnalyzer()
+
+    scores = df[field].apply(analyzer.polarity_scores).tolist()
+    df_scores = pd.DataFrame(scores)
+
+    df_scored = df.join(df_scores, rsuffix='_right')
+
+    return df_scored
+
+df_news_subset_scored = sentiment_scores(df_news_subset, 'title')
+df_news_subset_scored2 = sentiment_scores(df_news_subset_scored, 'desc')
+df_news_subset_scored2.rename(columns={'compound': 'compound_title', 'compound_right': 'compound_desc'}, inplace=True)
+
+df_news_subset_scored2.to_csv(f"'Election 2020' News for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
