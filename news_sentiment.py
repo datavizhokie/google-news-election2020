@@ -63,6 +63,9 @@ def googlenews_extract(date_range, num_pages, search_text):
 
 df_news = googlenews_extract(stringdate_list, 2, '2020 election')
 
+## Subset to having description (valid news stories)
+df_news_subset = df_news[df_news.desc != ""]
+
 
 def tokenize_headlines(df):
     
