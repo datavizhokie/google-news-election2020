@@ -3,6 +3,7 @@ import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.tokenize import word_tokenize
 from datetime import datetime, date
+import sys
 
 
 news_search_string  = '2020 election'
@@ -107,7 +108,12 @@ def main():
     # Subset to having a description (valid news stories)
     df_news_subset = df_news[df_news.desc != ""].reset_index(drop=True)
 
+    daily_cnts = df_news_subset.groupby('date_calendar')['title'].count().reset_index().rename(columns={'title':'cnt_stories'})
+
+    daily_avg_cnt = daily_cnts['cnt_stories'].mean()
+
     print(f"There are {len(df_news_subset)} valid stories for search string '{news_search_string}' in the generated dataset (across {pages} pages each day)")
+    print(f"There are {daily_avg_cnt} average stories per date")
 
     #TODO: bigram sentiment
     #all_bigrams = tokenize_headlines(df_news_subset)
