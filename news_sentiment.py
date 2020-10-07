@@ -1,13 +1,18 @@
 from GoogleNews import GoogleNews
 import pandas as pd
+import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.util import ngrams
+from collections import Counter
 from datetime import datetime, date
 import sys
 
 
 news_search_string  = '2020 election'
-pages               = 4
+pages               = 1
 
 def gen_cal_dates(start_date, end_date):
 
@@ -23,7 +28,7 @@ def googlenews_extract(date_range, num_pages, search_text):
     
     df_days = []
     
-    #TODO: if we want to pull multiple years of data, perhaps add multi-threading...not necessary for < ~20 calls
+    #TODO: add multi-threading
 
     for date in date_range:
         
@@ -55,28 +60,53 @@ def googlenews_extract(date_range, num_pages, search_text):
     return df_news
 
 
-def tokenize_headlines(df):
+def tokenize_headlines_with_sentiment(df):
     
     headlines = df.title.tolist()
 
     all_bigrams = []
 
-    for text in headlines:
-        
-        # remove punctuation
-        tokenizer = nltk.RegexpTokenizer(r"\w+")
-        tokens = tokenizer.tokenize(text)
+    headlines_string = (' '.join(filter(None, headlines))).lower()
+    tokens = word_tokenize(headlines_string)
 
-        bigrm = nltk.bigrams(tokens)
-        bigrams = list(bigrm)
-        all_bigrams.append(bigrams)
-        
-    print(f"There are {len(all_bigrams)} bigrams in across all Headlines")
+    # Remove single letter tokens
+    tokens_sans_singles = [i for i in tokens if len(i) > 1]
 
-    return all_bigrams
+    # Remove stop words
+    stopwords = nltk.corpus.stopwords.words('english')
+    new_words=("s'","'s","election", "2020", "n't", "wo")
+    for i in new_words:
+        stopwords.append(i)
+
+    tokens_sans_stop = [t for t in tokens_sans_singles if t not in stopwords]
+
+    # Get bigrams and frequencies
+    bi_grams = list(ngrams(tokens_sans_stop, 2)) 
+    counter = Counter(bi_grams)
+
+    # Convert counter dictionary to dataframe
+    counter_df = pd.DataFrame.from_dict(counter, orient='index').reset_index().rename(columns={"index": "bigram", 0: "freq"})
+    counter_df_sort = counter_df.sort_values(by=['freq'],ignore_index=True, ascending=False)
 
 
-def sentiment_scores(df, field):
+    # Create concatenated bigram string for sentiment scoring
+    counter_df_sort['word1'], counter_df_sort['word2'] = counter_df_sort.bigram.str
+    counter_df_sort['bigram_joined'] = counter_df_sort.word1 + " " + counter_df_sort.word2
+    counter_df_sort=counter_df_sort.drop(['word1','word2'], axis=1)
+
+    # get sentiment for bigrams
+    analyzer = SentimentIntensityAnalyzer()
+    bigrams_scores = counter_df_sort['bigram_joined'].apply(analyzer.polarity_scores).tolist()
+    df_bigrams_scores = pd.DataFrame(bigrams_scores).drop(['neg','neu','pos'], axis=1).rename(columns={"compound": "sentiment_compound"})
+    bigrams_freq_and_scores = counter_df_sort.join(df_bigrams_scores, rsuffix='_right')
+
+
+    print(f"There are {len(bigrams_freq_and_scores)} extracted bigrams in across all headlines")
+
+    return bigrams_freq_and_scores
+
+
+def headline_sentiment_scores(df, field):
 
     analyzer = SentimentIntensityAnalyzer()
     scores = df[field].apply(analyzer.polarity_scores).tolist()
@@ -89,6 +119,7 @@ def sentiment_scores(df, field):
 def main():
 
     datetime_list = gen_cal_dates(date(2020, 6, 1), date.today())
+    #datetime_list = gen_cal_dates(date(2020, 10, 1), date.today())
 
     stringdate_list = []
     for i in range(len(datetime_list)):
@@ -115,13 +146,17 @@ def main():
     print(f"There are {len(df_news_subset)} valid stories for search string '{news_search_string}' in the generated dataset (across {pages} pages each day)")
     print(f"There are {daily_avg_cnt} average stories per date")
 
-    #TODO: bigram sentiment
-    #all_bigrams = tokenize_headlines(df_news_subset)
+    # bigram sentiment
+    bigrams_freq_and_scores = tokenize_headlines_with_sentiment(df_news_subset)
 
-    df_news_subset_scored = sentiment_scores(df_news_subset, 'title')
-    df_news_subset_scored2 = sentiment_scores(df_news_subset_scored, 'desc')
+    # headline sentiment
+    df_news_subset_scored = headline_sentiment_scores(df_news_subset, 'title')
+    df_news_subset_scored2 = headline_sentiment_scores(df_news_subset_scored, 'desc')
     df_news_subset_scored2.rename(columns={'compound': 'compound_title', 'compound_right': 'compound_desc'}, inplace=True)
+    
+    # write results
     df_news_subset_scored2.to_csv(f"'Election 2020' News for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
+    bigrams_freq_and_scores.to_csv(f"'Election 2020' News Bigrams for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
 
 
 if __name__== "__main__" :
