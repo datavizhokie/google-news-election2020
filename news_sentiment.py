@@ -12,7 +12,7 @@ import sys
 
 
 news_search_string  = '2020 election'
-pages               = 1
+pages               = 4
 
 def gen_cal_dates(start_date, end_date):
 
