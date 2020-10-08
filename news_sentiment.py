@@ -9,10 +9,12 @@ from nltk.util import ngrams
 from collections import Counter
 from datetime import datetime, date
 import sys
+import time
 
+start_time = time.time()
 
-news_search_string  = '2020 election'
-pages               = 4
+news_search_string  = 'Trump'
+pages               = 5
 
 def gen_cal_dates(start_date, end_date):
 
@@ -74,7 +76,7 @@ def tokenize_headlines_with_sentiment(df):
 
     # Remove stop words
     stopwords = nltk.corpus.stopwords.words('english')
-    new_words=("s'","'s","election", "2020", "n't", "wo")
+    new_words=("s'","'s","election", "2020", "n't", "wo","...")
     for i in new_words:
         stopwords.append(i)
 
@@ -118,7 +120,7 @@ def headline_sentiment_scores(df, field):
 
 def main():
 
-    datetime_list = gen_cal_dates(date(2020, 6, 1), date.today())
+    datetime_list = gen_cal_dates(date(2020, 8, 1), date.today())
     #datetime_list = gen_cal_dates(date(2020, 10, 1), date.today())
 
     stringdate_list = []
@@ -155,8 +157,10 @@ def main():
     df_news_subset_scored2.rename(columns={'compound': 'compound_title', 'compound_right': 'compound_desc'}, inplace=True)
     
     # write results
-    df_news_subset_scored2.to_csv(f"'Election 2020' News for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
-    bigrams_freq_and_scores.to_csv(f"'Election 2020' News Bigrams for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
+    df_news_subset_scored2.to_csv(f"google-news-election2020/'{news_search_string}' News for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
+    bigrams_freq_and_scores.to_csv(f"google-news-election2020/'{news_search_string}' News Bigrams for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
+
+    print("--- %s seconds elapsed ---" % (time.time() - start_time))
 
 
 if __name__== "__main__" :
