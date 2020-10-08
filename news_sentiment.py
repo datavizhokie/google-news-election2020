@@ -15,6 +15,8 @@ start_time = time.time()
 
 news_search_string  = 'Trump'
 pages               = 5
+start_date          = '2020-08-01'
+
 
 def gen_cal_dates(start_date, end_date):
 
@@ -120,8 +122,7 @@ def headline_sentiment_scores(df, field):
 
 def main():
 
-    datetime_list = gen_cal_dates(date(2020, 8, 1), date.today())
-    #datetime_list = gen_cal_dates(date(2020, 10, 1), date.today())
+    datetime_list = gen_cal_dates(datetime.strptime(start_date, '%Y-%m-%d'), datetime.today())
 
     stringdate_list = []
     for i in range(len(datetime_list)):
@@ -157,8 +158,8 @@ def main():
     df_news_subset_scored2.rename(columns={'compound': 'compound_title', 'compound_right': 'compound_desc'}, inplace=True)
     
     # write results
-    df_news_subset_scored2.to_csv(f"google-news-election2020/'{news_search_string}' News for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
-    bigrams_freq_and_scores.to_csv(f"google-news-election2020/'{news_search_string}' News Bigrams for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
+    df_news_subset_scored2.to_csv(f"'{news_search_string}' News for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
+    bigrams_freq_and_scores.to_csv(f"'{news_search_string}' News Bigrams for {min_date} through {max_date} with Sentiment Scores.csv", index=False)
 
     print("--- %s seconds elapsed ---" % (time.time() - start_time))
 
