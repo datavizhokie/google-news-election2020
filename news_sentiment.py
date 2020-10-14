@@ -1,5 +1,5 @@
 from GoogleNews import GoogleNews
-import pandas as pd
+import pandas as pd 
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.tokenize import word_tokenize
@@ -28,7 +28,7 @@ def gen_cal_dates(start_date, end_date):
 
 def googlenews_extract(date_range, num_pages, search_text):
 
-    ''' Use googlenews package to extract top X stories per day based on search string '''
+    ''' Use googlenews package to extract stories from top {num_pages} pages per day based on {search_text} '''
     
     df_days = []
     
@@ -104,8 +104,7 @@ def tokenize_headlines_with_sentiment(df):
     df_bigrams_scores = pd.DataFrame(bigrams_scores).drop(['neg','neu','pos'], axis=1).rename(columns={"compound": "sentiment_compound"})
     bigrams_freq_and_scores = counter_df_sort.join(df_bigrams_scores, rsuffix='_right')
 
-
-    print(f"There are {len(bigrams_freq_and_scores)} extracted bigrams in across all headlines")
+    print(f"There are {len(bigrams_freq_and_scores)} extracted bigrams across all headlines")
 
     return bigrams_freq_and_scores
 
