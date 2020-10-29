@@ -15,7 +15,7 @@ start_time = time.time()
 
 news_search_string  = 'Trump'
 pages               = 5
-start_date          = '2020-08-01'
+start_date          = '2020-10-01'
 
 
 def gen_cal_dates(start_date, end_date):
@@ -78,11 +78,12 @@ def tokenize_headlines_with_sentiment(df):
 
     # Remove stop words
     stopwords = nltk.corpus.stopwords.words('english')
-    new_words=("s'","'s","election", "2020", "n't", "wo","...")
+    new_words=("s'","'s","election", "2020", "n't", "wo","...", "'")
     for i in new_words:
         stopwords.append(i)
 
     tokens_sans_stop = [t for t in tokens_sans_singles if t not in stopwords]
+    tokens_sans_stop = [t.replace('wins', 'win') for t in tokens_sans_stop]
 
     # Get bigrams and frequencies
     bi_grams = list(ngrams(tokens_sans_stop, 2)) 
