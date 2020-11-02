@@ -13,7 +13,7 @@ import time
 
 start_time = time.time()
 
-news_search_string  = 'Trump'
+news_search_string  = 'Biden'
 pages               = 5
 start_date          = '2020-10-01'
 
